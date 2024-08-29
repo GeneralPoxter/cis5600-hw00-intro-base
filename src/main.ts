@@ -1,4 +1,4 @@
-import { vec3 } from 'gl-matrix';
+import { vec3, vec4 } from 'gl-matrix';
 const Stats = require('stats-js');
 import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
@@ -12,6 +12,10 @@ import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
+  r: 1,
+  g: 0,
+  b: 0,
+  a: 1,
   tesselations: 5,
   'Load Scene': loadScene, // A function pointer, essentially
 };
@@ -26,7 +30,7 @@ function loadScene() {
   icosphere.create();
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
-  cube = new Cube(vec3.fromValues(0, 0, 0), 0.5);
+  cube = new Cube(vec3.fromValues(0, 0, 0), 1);
   cube.create();
 }
 
@@ -41,6 +45,10 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
+  gui.add(controls, 'r', 0, 1).step(0.01);
+  gui.add(controls, 'g', 0, 1).step(0.01);
+  gui.add(controls, 'b', 0, 1).step(0.01);
+  gui.add(controls, 'a', 0, 1).step(0.01);
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Scene');
 
@@ -79,11 +87,13 @@ function main() {
       icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       icosphere.create();
     }
-    renderer.render(camera, lambert, [
-      // icosphere,
-      // square,
-      cube,
-    ]);
+    renderer.render(camera, lambert,
+      vec4.fromValues(controls.r, controls.g, controls.b, controls.a),
+      [
+        // icosphere,
+        // square,
+        cube,
+      ]);
     stats.end();
 
     // Tell the browser to call `tick` again whenever it renders a new frame
