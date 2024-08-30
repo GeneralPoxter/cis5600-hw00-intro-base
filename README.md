@@ -7,6 +7,8 @@
 
 ## Submission (jasonhl)
 
+A rendition of van Gogh's _Starry Night_ on a cube / icosphere.
+
 Live demo: https://generalpoxter.github.io/cis5660-hw00-intro-base/
 
 Vertex shader:
