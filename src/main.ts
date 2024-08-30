@@ -4,6 +4,7 @@ import * as DAT from 'dat.gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
 import Cube from './geometry/Cube';
+import Drawable from './rendering/gl/Drawable';
 import OpenGLRenderer from './rendering/gl/OpenGLRenderer';
 import Camera from './Camera';
 import { setGL } from './globals';
@@ -12,27 +13,33 @@ import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  r: 1,
-  g: 0,
-  b: 0,
+  r: 0,
+  g: .25,
+  b: .50,
   a: 1,
   tesselations: 5,
-  'Load Scene': loadScene, // A function pointer, essentially
+  'Load Cube': loadCube,
+  'Load Icosphere': loadIcosphere,
+  'Load Square': loadSquare,
 };
 
-let icosphere: Icosphere;
-let square: Square;
-let cube: Cube;
+let activeDrawable: Drawable;
 let prevTesselations: number = 5;
 let time: number = 0;
 
-function loadScene() {
-  icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
-  icosphere.create();
-  square = new Square(vec3.fromValues(0, 0, 0));
-  square.create();
-  cube = new Cube(vec3.fromValues(0, 0, 0), 1);
-  cube.create();
+function loadCube() {
+  activeDrawable = new Cube(vec3.fromValues(0, 0, 0), 1);
+  activeDrawable.create();
+}
+
+function loadIcosphere() {
+  activeDrawable = new Icosphere(vec3.fromValues(0, 0, 0), 1, controls.tesselations);
+  activeDrawable.create();
+}
+
+function loadSquare() {
+  activeDrawable = new Square(vec3.fromValues(0, 0, 0));
+  activeDrawable.create();
 }
 
 function main() {
@@ -51,7 +58,9 @@ function main() {
   gui.add(controls, 'b', 0, 1).step(0.01);
   gui.add(controls, 'a', 0, 1).step(0.01);
   gui.add(controls, 'tesselations', 0, 8).step(1);
-  gui.add(controls, 'Load Scene');
+  gui.add(controls, 'Load Cube');
+  gui.add(controls, 'Load Icosphere');
+  gui.add(controls, 'Load Square');
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement>document.getElementById('canvas');
@@ -64,13 +73,15 @@ function main() {
   setGL(gl);
 
   // Initial call to load scene
-  loadScene();
+  loadCube();
 
   const camera = new Camera(vec3.fromValues(0, 0, 5), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.2, 0.2, 0.2, 1);
   gl.enable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
   const lambert = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/lambert-vert.glsl')),
@@ -88,19 +99,17 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     renderer.clear();
-    if (controls.tesselations != prevTesselations) {
+    if (activeDrawable instanceof Icosphere && controls.tesselations != prevTesselations) {
       prevTesselations = controls.tesselations;
-      icosphere = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
-      icosphere.create();
+      activeDrawable = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
+      activeDrawable.create();
     }
-    renderer.render(camera, custom,
+    renderer.render(
+      camera, custom,
       vec4.fromValues(controls.r, controls.g, controls.b, controls.a),
       time,
-      [
-        // icosphere,
-        // square,
-        cube,
-      ]);
+      [activeDrawable]
+    );
     stats.end();
 
     time += 1 / 60;
