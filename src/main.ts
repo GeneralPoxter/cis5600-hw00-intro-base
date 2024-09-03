@@ -13,14 +13,17 @@ import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
 const controls = {
-  r: 0,
-  g: .25,
-  b: .50,
-  a: 1,
   tesselations: 5,
   'Load Cube': loadCube,
   'Load Icosphere': loadIcosphere,
   'Load Square': loadSquare,
+};
+
+const palette = {
+  color1: [0, 64, 128],
+  alpha1: 1.0,
+  color2: [255, 192, 128],
+  alpha2: 1.0,
 };
 
 let activeDrawable: Drawable;
@@ -53,10 +56,10 @@ function main() {
 
   // Add controls to the gui
   const gui = new DAT.GUI();
-  gui.add(controls, 'r', 0, 1).step(0.01);
-  gui.add(controls, 'g', 0, 1).step(0.01);
-  gui.add(controls, 'b', 0, 1).step(0.01);
-  gui.add(controls, 'a', 0, 1).step(0.01);
+  gui.addColor(palette, 'color1');
+  gui.add(palette, 'alpha1', 0, 1).step(.01);
+  gui.addColor(palette, 'color2');
+  gui.add(palette, 'alpha2', 0, 1).step(.01);
   gui.add(controls, 'tesselations', 0, 8).step(1);
   gui.add(controls, 'Load Cube');
   gui.add(controls, 'Load Icosphere');
@@ -93,6 +96,12 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
   ]);
 
+  const shader = custom;
+
+  const vec4FromColor = ((color: number[], alpha: number) => {
+    return vec4.fromValues(color[0] / 255.0, color[1] / 255.0, color[2] / 255.0, alpha);
+  });
+
   // This function will be called every frame
   function tick() {
     camera.update();
@@ -104,10 +113,13 @@ function main() {
       activeDrawable = new Icosphere(vec3.fromValues(0, 0, 0), 1, prevTesselations);
       activeDrawable.create();
     }
+
+    shader.setGeometryColor(vec4FromColor(palette.color1, palette.alpha1));
+    shader.setNoiseColor(vec4FromColor(palette.color2, palette.alpha2));
+    shader.setTime(time);
+
     renderer.render(
-      camera, custom,
-      vec4.fromValues(controls.r, controls.g, controls.b, controls.a),
-      time,
+      camera, shader,
       [activeDrawable]
     );
     stats.end();

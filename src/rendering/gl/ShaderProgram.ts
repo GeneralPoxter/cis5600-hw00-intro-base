@@ -29,6 +29,7 @@ class ShaderProgram {
   unifModelInvTr: WebGLUniformLocation;
   unifViewProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
+  unifColorNoise: WebGLUniformLocation;
   unifTime: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
@@ -49,6 +50,7 @@ class ShaderProgram {
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj = gl.getUniformLocation(this.prog, "u_ViewProj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
+    this.unifColorNoise = gl.getUniformLocation(this.prog, "u_ColorNoise");
     this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
   }
 
@@ -84,6 +86,13 @@ class ShaderProgram {
     this.use();
     if (this.unifColor !== -1) {
       gl.uniform4fv(this.unifColor, color);
+    }
+  }
+
+  setNoiseColor(color: vec4) {
+    this.use();
+    if (this.unifColorNoise !== -1) {
+      gl.uniform4fv(this.unifColorNoise, color);
     }
   }
 

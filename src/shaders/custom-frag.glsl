@@ -2,7 +2,8 @@
 
 precision highp float;
 
-uniform vec4 u_Color; 
+uniform vec4 u_Color;
+uniform vec4 u_ColorNoise;
 
 in vec4 fs_Pos;
 
@@ -137,6 +138,6 @@ void main()
 {
     float noisePerlin = (perlin3D(5. * fs_Pos.xyz) + 1.) / 2.;
     float noiseFBM = mix(0.8, 1.0, musgraveFbm(waveFbm(fs_Pos.xyz * vec3(.05, .15, .15)) * vec3(100, 6, 20), 8, 0., 3.));
-    vec3 col = mix(u_Color.rgb, 1. - u_Color.rgb, smoothstep(0.6, 0.9, noisePerlin));
-    out_Col = vec4(col * vec3(noiseFBM), u_Color.a);
+    out_Col = mix(u_Color, u_ColorNoise, smoothstep(0.6, 0.9, noisePerlin));
+    out_Col.rgb *= vec3(noiseFBM);
 }
